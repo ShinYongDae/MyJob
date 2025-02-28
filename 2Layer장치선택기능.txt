@@ -1,0 +1,13 @@
+해성 디에스 Laser marking / Rej marking 기능 PLC Address
+
+안녕하십니까. 장신국 입니다.
+
+해성 디에스 Laser marking / Rej marking 기능 PLC Address 공유해드립니다.
+
+MB40009A	GUI 각인기 사용
+//MB40009B	GUI AOI 상면 사용
+//MB40009C	GUI AOI 하면 사용
+//MB40009D	GUI 마킹 사용
+MB40009E	GUI 마킹만 사용
+
+이상입니다.
