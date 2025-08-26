@@ -1,0 +1,225 @@
+;--------------------------------------                                       
+;  SMAC PROGRAMMING BASIC FUNCTIONS    Gigavis MDS R2R                                                       
+;  1-axis(Z-axis) only!!                         
+;----------------------------------------------------------------------------                                                                              
+RM   
+WA30     
+;  
+;;***************************************************************************                                                                              
+; *** Z-axis : Memory Allotcation ***                                      
+;  
+;>>> Position Values                     
+AL600,AR10     ;; PICK-UP  ()                              
+AL1000,AR12    ;; PICK-UP Soft-Landing  ?? mm                                              
+AL1300,AR14     ;; PLACE  ()    				- Shift Pos                         
+AL1400,AR16    ;; PLACE Soft-Landing  2mm ,2876     		- Marking Pos                                           
+;  
+;>>> Volacity, Acceleration for PM mode, SOFT-LANDING                                                      
+AL160000,AR20  ;; Z-axis SV()   - PM mode, fast   ,    .            	- Marking Velocity                                          
+AL80000,AR22   ;; Z-axis SA() - PM mode, fast   ,  .                 	- Marking Acc                                 
+AL70000,AR30   ;; Z-Axis "SV" for Soft-Landing!, slow,,     	- ShiftPos Velocity                                                   
+AL10000,AR32   ;; Z-Axis "SA" for Soft-Landing!, slow,,    	 	- ShiftPos Acc                                                  
+;  
+;>>> Toq         
+AL6000,AR40   ;; Final Toq   				- Marking Torque                        
+AL1000,AR42    ;; Z-Axis "SA" for ,                                    
+;  AR48							- Marking TorqueOffset
+;>>> During HOMING - SV, SA  ,                               
+AL13100,AR44;; Z-axis, Motor SV () -                                     
+AL5000,AR46   ;; Z-axis, Motor SA ()                                     
+;  
+;;*******************************************                                             
+;  
+;========================================================================                                                                          
+;------> Z-axis SERVO ON/OFF                             
+;  
+MD10,1MN;; Z SERVO ON                      
+MD12,1MF;; Z SERVO OFF                       
+;  
+;========================================================================                                                                          
+;;-----> Get State                   
+MD20,RL448,IC0,MJ22,NO,IS1,MJ23,NO,MJ21                                        
+MD21,MG":STATUS_OK;",EP                        
+MD22,MG":SERVO_OFF_OK;",EP                           
+MD23,MG":SERVO_ERROR_OK;",EP                             
+;  
+;========================================================================                                                                          
+;;-----> Motion: Move Z-axis  to waiting positon   For PICK-U                                                            
+;  
+MD30,1PM,1MA@10,1SV@20,1SA@22,1GO,1WS50                                        
+MD31,MG"A"           
+;  
+;========================================================================                                                                          
+;;-----> Motion: Move Z-axis  to SOFT-LANDING position   For PICK-UP                                                                     
+;  
+MD40,1PM,1MA@12,1SV@20,1SA@22,1GO,1WS50                                        
+MD41,MG"OK"            
+;  
+;========================================================================                                                                          
+;;-----> Motion: Move Z-axis  to waiting positon  For PLACING                                                              
+;  
+MD50,1PM,1MA@14,1SV@20,1SA@22,1GO,1WS50                                        
+MD51,MG"OK"            
+;  
+;========================================================                                                         
+;;-----> Motion: Move Z-axis to Soft-Landing position For PLACING   (Punching)                                                               
+;  
+MD60,1PM,SV@20,SA@22,MA@14,GO,WS0,MJ61                                       
+MD61,1PM,SQ@40,SV@20,SA@22,MA@16,GO,WS50,MJ62                                              
+MD62,1PM,SV@20,SA@22,MA@14,GO,WS50,MJ63                                        
+MD63,MG"PUNCHING_OK",EP                        
+;  
+;-------------------------------------------------------------------------                                                                           
+;;======> Measure Surface                          
+;  
+MD70,NO        
+MD71,1VM,MN,SQ20000,SV@30,SA@32,DI0,GO,WA10                                            
+MD72,RW538,IG30,ST,MJ73,RP;;RW538 is Following Error. IG30(if F-E is bigger than 30 counts), !               
+MD73,PM,ST,TP,WA50                   
+MD74,MG"OK"            
+;  
+;-------------------------------------------------------------------------                                                                           
+;; Z-axis Servo-On  Check                          
+;  
+MD80,RL448,IS0,MJ82,NO,MJ84                            
+MD82,MG"G";; SERVO ON                      
+MD84,MG"H";; SERVO OFF                       
+;  
+;--------------------------------------------------------------------------------------------               
+;; Marking-axis Reset                      
+MD110,RT,EP            
+;  
+;---------------------------------------------------------------------------                                                                             
+;; Home Sensor Status Check                            
+;  
+MD130,RL448,IS10,MJ132,NO,MJ134,RP  ;;RP = repeat                                                  
+MD132,MG"K" ;; ORG ON                      
+MD134,MG"L" ;;               
+;  
+;----------------------------------------------------------------------------                                                                              
+;; Minus Limit Sensor Status Check                                   
+;  
+MD140,RL448,IS27,MJ142,NO,MJ144                                
+MD142,MG"M";; EL- ON                     
+MD144,MG"N";; EL- OFF                      
+;  
+;----------------------------------------------------------------------------                                                                              
+;; Plus Limit Sensor Status Check                                  
+MD150,RL448,IS30,MJ152,NO,MJ154                                
+MD152,MG"O";; EL+ ON                     
+MD154,MG"P";; EL+ OFF                      
+;  
+;-----------------------------------------------------------------------------                                                                               
+;; Z-axis Motor Alarm Check                            
+MD160,RL448,IS1,MJ162,NO,MJ164                               
+MD162,MG"Q";; ALARM ON                       
+MD164,MG"R";; ALARM OFF                        
+;  
+;------------------------------------------------------------------------------                                                                                
+;; Z-axis Motion Done Check                            
+MD180,RL448,IS4,MJ182,NO,MJ184                               
+MD182,MG"U";; MOT RUN                      
+MD184,MG"V";; MOT OFF                      
+;  
+;------------------------------------------------------------------------------                                                                                 
+;; Z-axis Motor Current Position Check                                       
+MD200,1TP,WA50               
+MD201,MG"OK"             
+;  
+;------------------------------------------------------------------------------                                                                                
+      
+;;Z-axis(1-axis) Homing                        
+MD220,WA100            
+MD221,1PH0,FR0,RI0,VM,MN,SG80,SI500,SD1800,SV@44,SA@46,SQ15000,IL8000,SE5000,DI1,GO,WA100          
+MD222,RW538,ib-500,no,mj223,RP                               
+MD223,DH,ST            
+MD224,PM,MN,MA1000,GO,WS100     ;check for index found in first 5 mm                                                                     
+MD225,MG"OK"             
+;  
+;  
+;------------------------------------------------------------------------------ ---------------               
+;; Z-axis Current Positon to set "0"(Home)                                           
+MD240,1DH0           
+;  
+;------------------------------------------------------------------------------                                                                                
+ 
+;; Z-axis Following Error,  TF(Following Error) = TO(Target Position) - TP(Current Position)             
+MD250,1TF          
+;  
+;  
+; End of Program.                  
+;  
+;-----------------------------------------------------------------------------                                                                               
+;; !  1000 <---> 9000  !                         
+;PM,MN       
+;MA1000,GO,WS200,TP,MA9000,GO,WS200,TP,RP                                          
+;MA1000,GO,WS100,TP,MA9000,GO,WS100,TP,RP                                          
+ 
+
+RM   
+WA30     
+AL600,AR10
+AL1000,AR12
+AL1300,AR14
+AL1400,AR16
+AL160000,AR20
+AL80000,AR22
+AL70000,AR30
+AL10000,AR32
+AL6000,AR40
+AL1000,AR42
+AL13100,AR44
+AL5000,AR46
+
+ 
+tm-1    
+MD10 1MN
+MD12 1MF
+MD20 RL448,IC0,MJ22,NO,IS1,MJ23,NO,MJ21
+MD21 MG":STATUS_OK;",EP
+MD22 MG":SERVO_OFF_OK;",EP
+MD23 MG":SERVO_ERROR_OK;",RC,EP
+MD30 1PM,1MA@10,1SV@20,1SA@22,1GO,1WS50
+MD31 MG":OK;",RC,EP
+MD40 1PM,1MA@12,1SV@20,1SA@22,1GO,1WS50
+MD41 MG":OK;",RC,EP
+MD50 1PM,1MA@14,1SV@20,1SA@22,1GO,1WS50
+MD51 MG":OK;",RC,EP
+MD60 1PM,SV@20,SA@22,MA@14,GO,WS0,MJ61
+MD61 1MN,1QM1,1SC8000,1SQ@40,WA50,SQ0,WS50,MJ62
+MD62 1PM,SV@20,SA@22,MA@14,GO,WS0,MJ63
+MD63 MG":PUNCHING_OK;",RC,EP
+MD70 NO
+MD71 1VM,MN,SQ30000,SV80000,SA20000,DI0,GO,WA10
+MD72 RW538,IG30,ST,MJ73,RP
+MD73 PM,ST,MG":",TP,MG";",WA50
+MD74 MG":OK;",RC,EP
+MD80 RL448,IS0,MJ82,NO,MJ84
+MD82 MG"G",RC,EP
+MD84 MG"H",RC,EP
+MD110 RT,EP,RC,EP
+MD130 RL448,IS10,MJ132,NO,MJ134,RP
+MD132 MG"K",RC,EP
+MD134 MG"L",RC,EP
+MD140 RL448,IS27,MJ142,NO,MJ144
+MD142 MG"M",RC,EP
+MD144 MG"N",RC,EP
+MD150 RL448,IS30,MJ152,NO,MJ154
+MD152 MG"O",RC,EP
+MD154 MG"P",RC,EP
+MD160 RL448,IS1,MJ162,NO,MJ164
+MD162 MG"Q",RC,EP
+MD164 MG"R",RC,EP
+MD180 RL448,IS4,MJ182,NO,MJ184
+MD182 MG"U",RC,EP
+MD184 MG"V",RC,EP
+MD200 1TP,WA50
+MD201 MG":OK;",RC,EP
+MD220 WA100
+MD221 1PH0,FR0,RI0,VM,MN,SG80,SI500,SD1800,SV@44,SA@46,SQ15000,IL8000,SE5000,DI1,GO,WA100
+MD222 RW538,IB-500,NO,MJ223,RP
+MD223 DH,ST
+MD224 PM,MN,MA100,GO,WS100
+MD225 MG":OK;",RC,EP
+MD240 1DH0,RC,EP
+MD250 1TF,RC,EP

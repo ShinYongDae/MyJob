@@ -1,0 +1,156 @@
+;---------------------------------------------------------------------------
+;  SMAC PROGRAMMING BASIC FUNCTIONS    Gigavis MDS R2R
+;  1-axis(Z-axis) only!!
+;----------------------------------------------------------------------------
+RM
+WA30
+;
+;;***************************************************************************
+; *** Z-axis : Memory Allotcation ***
+;
+;>>> Position Values
+AL400,AR10     ;; PICK-UP시 중간 대기위치(중간쯤)
+AL500,AR12    ;; PICK-UP시 Soft-Landing 직전 ?? mm위 위치
+AL700,AR14     ;; PLACE시 중간 대기위치(중간쯤)
+AL750,AR16    ;; PLACE시 Soft-Landing 직전 2mm위 위치,2876
+;
+;>>> Volacity, Acceleration for PM mode, SOFT-LANDING
+AL160000,AR20  ;; Z-axis SV(속도)   - PM mode, fast 모드시 이동 속도,   약간 빠르게.
+AL80000,AR22   ;; Z-axis SA(가속도) - PM mode, fast 모드시 이동 가속도, 약간 빠르게.
+AL70000,AR30   ;; Z-Axis "SV" for Soft-Landing!, slow,속도,   천천히
+AL10000,AR32   ;; Z-Axis "SA" for Soft-Landing!, slow,가속도, 천천히
+;
+;>>> Toq
+AL100,AR40   ;; Final Toq
+AL1000,AR42    ;; Z-Axis "SA" for 조그,가속도
+;
+;>>> During HOMING - SV, SA  속도,가속도
+AL13100,AR44	;; Z-axis, Motor SV (속도) - 적당한 속도
+AL5000,AR46   	;; Z-axis, Motor SA (가속도)    
+;
+;;***************************************************************************
+;
+;========================================================================
+;------> Z-axis SERVO ON/OFF 					
+;
+MD10,1MN	;; Z SERVO ON
+MD12,1MF	;; Z SERVO OFF
+;
+;========================================================================
+;;-----> Get State
+MD20,RL448,IC0,MJ22,NO,IS1,MJ23,NO,MJ21
+MD21,MG":STATUS_OK;",EP
+MD22,MG":SERVO_OFF_OK;",EP
+MD23,MG":SERVO_ERROR_OK;",RC,EP
+;
+;========================================================================
+;;-----> Motion: Move Z-axis  to waiting positon   For PICK-UP
+; 
+MD30,1PM,1MA@10,1SV@20,1SA@22,1GO,1WS50
+MD31,MG":OK;",RC,EP
+;
+;========================================================================
+;;-----> Motion: Move Z-axis  to
+;		
+MD40,1PM,1MA@12,1SV@20,1SA@22,1GO,1WS50
+MD41,MG":OK;",RC,EP
+;
+;========================================================================
+;;-----> Motion: Move Z-axis  to waiting positon
+;
+MD50,1PM,1MA@14,1SV@20,1SA@22,1GO,1WS50
+MD51,MG":OK;",RC,EP
+;
+;=========================================================================
+;;-----> Motion: Marking
+;
+MD60,1PM,SV@20,SA@22,MA@14,GO,WS0,MJ61
+MD61,1MN,1QM1,1SC8000,1SQ@40,WA50,SQ0,WS50,MJ62  ;;This means you apply 0.5 Amp for 500 msec.
+MD62,1PM,SV@20,SA@22,MA@14,GO,WS0,MJ63
+MD63,MG":PUNCHING_OK;",RC,EP
+;
+;-------------------------------------------------------------------------
+;;======> Measure Surface
+;
+MD70,NO						
+MD71,1VM,MN,SQ30000,SV80000,SA20000,DI0,GO,WA10 
+MD72,RW538,IG30,ST,MJ73,RP	;;RW538 is Following Error. IG30(if F-E is bigger than 30 counts), 눌림량!
+MD73,PM,ST,MG":",TP,MG";",WA50 
+MD74,MG":OK;",RC,EP
+;
+;-------------------------------------------------------------------------
+;; Z-axis Servo-On  Check 
+;
+MD80,RL448,IS0,MJ82,NO,MJ84
+MD82,MG"G",RC,EP	;; SERVO ON
+MD84,MG"H",RC,EP	;; SERVO OFF
+;
+;---------------------------------------------------------------------------------------------
+;; Marking-axis Reset
+MD110,RT,EP,RC,EP
+;
+;---------------------------------------------------------------------------
+;; Home Sensor Status Check
+; 		
+MD130,RL448,IS10,MJ132,NO,MJ134,RP  ;;RP = repeat
+MD132,MG"K",RC,EP ;; ORG ON
+MD134,MG"L",RC,EP ;; ORG OFF
+;
+;----------------------------------------------------------------------------
+;; Minus Limit Sensor Status Check
+;   	
+MD140,RL448,IS27,MJ142,NO,MJ144
+MD142,MG"M",RC,EP	;; EL- ON
+MD144,MG"N",RC,EP	;; EL- OFF
+;
+;----------------------------------------------------------------------------
+;; Plus Limit Sensor Status Check	
+MD150,RL448,IS30,MJ152,NO,MJ154
+MD152,MG"O",RC,EP	;; EL+ ON
+MD154,MG"P",RC,EP	;; EL+ OFF
+;
+;-----------------------------------------------------------------------------
+;; Z-axis Motor Alarm Check		
+MD160,RL448,IS1,MJ162,NO,MJ164
+MD162,MG"Q",RC,EP	;; ALARM ON
+MD164,MG"R",RC,EP	;; ALARM OFF
+;
+;------------------------------------------------------------------------------
+;; Z-axis Motion Done Check
+MD180,RL448,IS4,MJ182,NO,MJ184
+MD182,MG"U",RC,EP	;; MOT RUN
+MD184,MG"V",RC,EP	;; MOT OFF
+;
+;-------------------------------------------------------------------------------
+;; Z-axis Motor Current Position Check	
+MD200,1TP,WA50
+MD201,MG":OK;",RC,EP	
+;
+;--------------------------------------------------------------------------------------------
+;;Z-axis(1-axis) Homing 						
+MD220,WA100								
+MD221,1PH0,FR0,RI0,VM,MN,SG80,SI500,SD1800,SV@44,SA@46,SQ15000,IL8000,SE5000,DI1,GO,WA100								
+MD222,RW538,ib-500,no,mj223,RP								
+MD223,DH,ST					
+MD224,PM,MN,MA100,GO,WS100     ;check for index found in first 5 mm 								
+MD225,MG":OK;",RC,EP
+
+MD222,RW538,IB-10,NO,MJ223,RP								
+;
+;
+;---------------------------------------------------------------------------------------------
+;; Z-axis Current Positon to set "0"(Home)
+MD240,1DH0,RC,EP
+;
+;--------------------------------------------------------------------------------
+;; Z-axis Following Error,  TF(Following Error) = TO(Target Position) - TP(Current Position)
+MD250,1TF,RC,EP
+;
+;
+; End of Program.
+;
+;-----------------------------------------------------------------------------
+;; 반복운동!  1000 <---> 9000 으로 반복운동!
+;PM,MN
+;MA1000,GO,WS200,TP,MA9000,GO,WS200,TP,RP
+;MA1000,GO,WS100,TP,MA9000,GO,WS100,TP,RP
