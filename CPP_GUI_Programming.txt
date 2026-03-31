@@ -1,0 +1,19 @@
+
+
+KR
+
+탐색 건너뛰기
+이클립스 c++ gui 만들기
+
+
+
+
+
+만들기
+
+9+
+
+아바타 이미지
+
+C++ GUI Programming For Beginners | Episode 1 - Installing wxWidgets
+https://www.youtube.com/watch?v=ONYW3hBbk-8&list=PLFk1_lkqT8MbVOcwEppCPfjGOGhLvcf9G&index=2
